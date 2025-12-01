@@ -2,14 +2,11 @@ package com.example.test_lab_week_12
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
-import kotlinx.coroutines.launch
+import java.util.Calendar
 
 class MainActivity : AppCompatActivity() {
 
@@ -37,23 +34,22 @@ class MainActivity : AppCompatActivity() {
             }
         )[MovieViewModel::class.java]
 
-        // PART 2: Menggunakan Flow/StateFlow
-        movieViewModel.fetchPopularMoviesFlow()
+        // PART 1: Menggunakan LiveData dengan Coroutines
+        movieViewModel.popularMovies.observe(this) { popularMovies ->
+            val currentYear = Calendar.getInstance().get(Calendar.YEAR).toString()
 
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                launch {
-                    movieViewModel.popularMoviesFlow.collect { movies ->
-                        movieAdapter.addMovies(movies)
+            movieAdapter.addMovies(
+                popularMovies
+                    .filter { movie ->
+                        movie.releaseDate?.startsWith(currentYear) == true
                     }
-                }
-                launch {
-                    movieViewModel.errorFlow.collect { error ->
-                        if (error.isNotEmpty()) {
-                            Snackbar.make(recyclerView, error, Snackbar.LENGTH_LONG).show()
-                        }
-                    }
-                }
+                    .sortedByDescending { it.popularity }
+            )
+        }
+
+        movieViewModel.error.observe(this) { error ->
+            if (error.isNotEmpty()) {
+                Snackbar.make(recyclerView, error, Snackbar.LENGTH_LONG).show()
             }
         }
     }

@@ -5,11 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.test_lab_week_12.model.Movie
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
-import java.util.Calendar
 
 class MovieViewModel(private val movieRepository: MovieRepository) : ViewModel() {
 
@@ -17,44 +13,17 @@ class MovieViewModel(private val movieRepository: MovieRepository) : ViewModel()
         fetchPopularMovies()
     }
 
-    // LiveData untuk Part 1
+    // LiveData untuk observe data
     val popularMovies: LiveData<List<Movie>>
         get() = movieRepository.movies
+
     val error: LiveData<String>
         get() = movieRepository.error
 
-    // StateFlow untuk Part 2
-    private val _popularMoviesFlow = MutableStateFlow(emptyList<Movie>())
-    val popularMoviesFlow: StateFlow<List<Movie>> = _popularMoviesFlow
-
-    private val _errorFlow = MutableStateFlow("")
-    val errorFlow: StateFlow<String> = _errorFlow
-
-    // Fetch untuk Part 1 (dengan LiveData)
+    // Fetch movies menggunakan Coroutines dengan Dispatchers.IO
     private fun fetchPopularMovies() {
         viewModelScope.launch(Dispatchers.IO) {
             movieRepository.fetchMovies()
-        }
-    }
-
-    // Fetch untuk Part 2 (dengan Flow) + ASSIGNMENT
-    fun fetchPopularMoviesFlow() {
-        viewModelScope.launch(Dispatchers.IO) {
-            movieRepository.fetchMoviesFlow()
-                .catch {
-                    _errorFlow.value = "An exception occurred: ${it.message}"
-                }
-                .collect { movies ->
-                    // ASSIGNMENT: Filter by current year & Sort by popularity
-                    val currentYear = Calendar.getInstance().get(Calendar.YEAR).toString()
-                    val filteredMovies = movies
-                        .filter { movie ->
-                            movie.releaseDate?.startsWith(currentYear) == true
-                        }
-                        .sortedByDescending { it.popularity }
-
-                    _popularMoviesFlow.value = filteredMovies
-                }
         }
     }
 }
