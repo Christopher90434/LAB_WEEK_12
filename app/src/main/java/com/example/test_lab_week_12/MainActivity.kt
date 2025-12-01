@@ -34,7 +34,7 @@ class MainActivity : AppCompatActivity() {
             }
         )[MovieViewModel::class.java]
 
-        // PART 1: Menggunakan LiveData (Untuk Commit 2)
+        // PART 1: Menggunakan LiveData dengan filter tahun 2025
         movieViewModel.popularMovies.observe(this) { popularMovies ->
             val currentYear = Calendar.getInstance().get(Calendar.YEAR).toString()
 
